@@ -60,6 +60,10 @@ namespace K2Engineering
             for(int i=0; i<lines.Count; i++)
             {
                 int[] indexes = findEndIndexes(lines[i], planeOrigins);
+                if(indexes.Length == 0)
+                {
+                    this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Not able to find both start and end index for one or more lines");
+                }
 
                 Vector3d shear = new Vector3d();
                 if(indexes[0] != -1 && indexes[1] != -1)
@@ -88,7 +92,7 @@ namespace K2Engineering
         //Methods
 
         //Extract origin of planes
-        List<Point3d> extractPlaneOrigins(List<Plane> planes)
+        public static List<Point3d> extractPlaneOrigins(List<Plane> planes)
         {
             List<Point3d> origins = new List<Point3d>();
 
@@ -103,7 +107,7 @@ namespace K2Engineering
 
 
         //Find the index of the endpoints of a line in the list of bending planes
-        int[] findEndIndexes(Line ln, List<Point3d> planeOrigins)
+        public static int[] findEndIndexes(Line ln, List<Point3d> planeOrigins)
         {
             Point3d lnStart = new Point3d(Math.Round(ln.FromX, 3), Math.Round(ln.FromY, 3), Math.Round(ln.FromZ, 3));
             Point3d lnEnd = new Point3d(Math.Round(ln.ToX, 3), Math.Round(ln.ToY, 3), Math.Round(ln.ToZ, 3));
@@ -130,7 +134,11 @@ namespace K2Engineering
 
             if(indexStart == -1 && indexEnd == -1)
             {
-                this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Not able to find both start and end index for one or more lines");
+                // this.AddRuntimeMessage(GH_RuntimeMessageLevel.Error, "Not able to find both start and end index for one or more lines");
+                // NOTE: we can't reference `this` inside a static function, so
+                // one option is to return an empty array and check for this
+                // condition in SolveInstance (where we can reference `this`).
+                return new int[0];
             }
 
             return indexes;
@@ -138,7 +146,7 @@ namespace K2Engineering
 
 
         //Calculate the shear vector from the difference in moments at the start and end of line segment
-        Vector3d calcShearVector(Plane plStart, double momentStart, Plane plEnd, double momentEnd, Line ln)
+        public static Vector3d calcShearVector(Plane plStart, double momentStart, Plane plEnd, double momentEnd, Line ln)
         {
             //find the direction of the shear force
             Vector3d mdirStart = plStart.YAxis * momentStart;
